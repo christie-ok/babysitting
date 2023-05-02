@@ -1,0 +1,49 @@
+<.header>
+  Listing Children
+  <:actions>
+    <.link patch={~p"/children/new"}>
+      <.button>New Child</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="children"
+  rows={@streams.children}
+  row_click={fn {_id, child} -> JS.navigate(~p"/children/#{child}") end}
+>
+  <:col :let={{_id, child}} label="First name"><%= child.first_name %></:col>
+  <:col :let={{_id, child}} label="Last name"><%= child.last_name %></:col>
+  <:col :let={{_id, child}} label="Birthday"><%= child.birthday %></:col>
+  <:col :let={{_id, child}} label="Gender"><%= child.gender %></:col>
+  <:action :let={{_id, child}}>
+    <div class="sr-only">
+      <.link navigate={~p"/children/#{child}"}>Show</.link>
+    </div>
+    <.link patch={~p"/children/#{child}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, child}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: child.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="child-modal"
+  show
+  on_cancel={JS.patch(~p"/children")}
+>
+  <.live_component
+    module={BabysittingWeb.ChildLive.FormComponent}
+    id={@child.id || :new}
+    title={@page_title}
+    action={@live_action}
+    child={@child}
+    patch={~p"/children"}
+  />
+</.modal>

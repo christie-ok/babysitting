@@ -1,0 +1,34 @@
+<.header>
+  Child <%= @child.id %>
+  <:subtitle>This is a child record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/children/#{@child}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit child</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="First name"><%= @child.first_name %></:item>
+  <:item title="Last name"><%= @child.last_name %></:item>
+  <:item title="Birthday"><%= @child.birthday %></:item>
+  <:item title="Gender"><%= @child.gender %></:item>
+</.list>
+
+<.back navigate={~p"/children"}>Back to children</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="child-modal"
+  show
+  on_cancel={JS.patch(~p"/children/#{@child}")}
+>
+  <.live_component
+    module={BabysittingWeb.ChildLive.FormComponent}
+    id={@child.id}
+    title={@page_title}
+    action={@live_action}
+    child={@child}
+    patch={~p"/children/#{@child}"}
+  />
+</.modal>
