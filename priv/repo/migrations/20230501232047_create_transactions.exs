@@ -3,9 +3,11 @@ defmodule Babysitting.Repo.Migrations.CreateTransactions do
 
   def change do
     create table(:transactions) do
-      add :hours, :integer
-      add :caregiving_user_id, references(:users, on_delete: :nothing)
-      add :care_getting_user_id, references(:users, on_delete: :nothing)
+      add :hours, :float, null: false
+      add :caregiving_user_id, references(:users, on_delete: :nothing), null: false
+      add :care_getting_user_id, references(:users, on_delete: :nothing), null: false
+      add :start, :utc_datetime, null: false
+      add :end, :utc_datetime, null: false
 
       timestamps()
     end

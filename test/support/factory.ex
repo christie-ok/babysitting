@@ -25,10 +25,14 @@ defmodule Babysitting.Factory do
   end
 
   def transaction_factory do
+    now = DateTime.utc_now()
+
     %Babysitting.Transactions.Transaction{
       caregiving_user: build(:user),
       care_getting_user: build(:user),
-      hours: 2
+      start: DateTime.add(now, -5, :hour),
+      end: DateTime.add(now, -3, :hour),
+      hours: 2.0
     }
   end
 end

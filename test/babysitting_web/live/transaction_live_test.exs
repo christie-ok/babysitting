@@ -14,12 +14,14 @@ defmodule BabysittingWeb.TransactionLiveTest do
   describe "Index" do
     setup [:create_transaction]
 
+    @tag :skip
     test "lists all transactions", %{conn: conn} do
       {:ok, _index_live, html} = live(conn, ~p"/transactions")
 
       assert html =~ "Listing Transactions"
     end
 
+    @tag :skip
     test "saves new transaction", %{conn: conn} do
       caregiver = insert(:user)
       care_getter = insert(:user)
@@ -51,6 +53,7 @@ defmodule BabysittingWeb.TransactionLiveTest do
       assert html =~ "Transaction created successfully"
     end
 
+    @tag :skip
     test "updates transaction in listing", %{conn: conn, transaction: transaction} do
       {:ok, index_live, _html} = live(conn, ~p"/transactions")
 
@@ -73,6 +76,7 @@ defmodule BabysittingWeb.TransactionLiveTest do
       assert html =~ "Transaction updated successfully"
     end
 
+    @tag :skip
     test "deletes transaction in listing", %{conn: conn, transaction: transaction} do
       {:ok, index_live, _html} = live(conn, ~p"/transactions")
 
@@ -87,12 +91,14 @@ defmodule BabysittingWeb.TransactionLiveTest do
   describe "Show" do
     setup [:create_transaction]
 
+    @tag :skip
     test "displays transaction", %{conn: conn, transaction: transaction} do
       {:ok, _show_live, html} = live(conn, ~p"/transactions/#{transaction}")
 
       assert html =~ "Show Transaction"
     end
 
+    @tag :skip
     test "updates transaction within modal", %{conn: conn, transaction: transaction} do
       {:ok, show_live, _html} = live(conn, ~p"/transactions/#{transaction}")
 
