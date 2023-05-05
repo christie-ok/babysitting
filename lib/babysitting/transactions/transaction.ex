@@ -22,12 +22,12 @@ defmodule Babysitting.Transactions.Transaction do
     transaction
     |> cast(attrs, [:caregiving_user_id, :care_getting_user_id, :start, :end])
     |> validate_required([:caregiving_user_id, :care_getting_user_id, :start, :end])
-    |> confirm_end_after_start()
-    |> calculate_hours()
+    |> validate_start_end()
+    |> put_hours()
     |> validate_required([:hours])
   end
 
-  def confirm_end_after_start(changeset) do
+  defp validate_start_end(changeset) do
     %{start_datetime: start_datetime, end_datetime: end_datetime} = start_end_times(changeset)
 
     if DateTime.compare(start_datetime, end_datetime) == :lt do
@@ -37,16 +37,20 @@ defmodule Babysitting.Transactions.Transaction do
     end
   end
 
-  def calculate_hours(changeset) do
+  defp put_hours(changeset) do
     %{start_datetime: start_datetime, end_datetime: end_datetime} = start_end_times(changeset)
 
-    hours = DateTime.diff(end_datetime, start_datetime)
-    |> seconds_to_hours()
+    hours = calculate_hours(start_datetime, end_datetime)
 
     put_change(changeset, :hours, hours)
   end
 
-  def seconds_to_hours(seconds) do
+  defp calculate_hours(start_datetime, end_datetime) do
+    DateTime.diff(end_datetime, start_datetime)
+    |> seconds_to_hours()
+  end
+
+  defp seconds_to_hours(seconds) do
     seconds / 60 / 60 |> Float.round(@decimal_preciscion)
   end
 
