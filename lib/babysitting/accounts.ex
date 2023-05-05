@@ -110,4 +110,14 @@ defmodule Babysitting.Accounts do
     list_users()
     |> Enum.map(&{full_name(&1), &1.id})
   end
+
+  def get_parent_with_children_by(get_by, value) do
+    lookup = Map.new([{get_by, value}])
+
+    Repo.get_by(
+      User,
+      lookup
+    )
+    |> Repo.preload([:children])
+  end
 end

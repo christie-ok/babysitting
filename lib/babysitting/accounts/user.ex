@@ -11,6 +11,8 @@ defmodule Babysitting.Accounts.User do
     field :zip, :string
     field :hours_bank, :integer, default: 0
 
+    has_many :children, Babysitting.Children.Child, foreign_key: :parent_id
+
     timestamps()
   end
 

@@ -41,6 +41,12 @@ defmodule BabysittingWeb.Router do
     live "/transactions/:id/show/edit", TransactionLive.Show, :edit
   end
 
+  scope "/api", BabysittingWeb.API do
+    # get("/:resource", APIController, :index)
+    post("/user", APIController, :insert_user_and_children)
+    # delete("/:resource", APIController, :destroy_all)
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", BabysittingWeb do
   #   pipe_through :api

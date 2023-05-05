@@ -2,10 +2,10 @@ defmodule Babysitting.AccountsTest do
   use Babysitting.DataCase
 
   alias Babysitting.Accounts
+  alias Babysitting.Accounts.User
+  alias Babysitting.Children.Child
 
   describe "users" do
-    alias Babysitting.Accounts.User
-
     @invalid_attrs %{first_name: nil, last_name: nil}
 
     test "list_users/0 returns all users" do
@@ -78,6 +78,50 @@ defmodule Babysitting.AccountsTest do
       user = insert(:user, first_name: "Harry", last_name: "Potter")
 
       assert "Harry Potter" == Accounts.full_name(user)
+    end
+  end
+
+  describe "get_parent_with_children_by" do
+    setup do
+      %User{id: molly_id} = molly = insert(:user, first_name: "Molly", last_name: "Weasley")
+      %Child{id: ron_id} = insert(:child, first_name: "Ron", last_name: "Weasley", parent: molly)
+
+      %Child{id: ginny_id} =
+        insert(:child, first_name: "Ginny", last_name: "Weasley", parent: molly)
+
+      %{
+        molly_id: molly_id,
+        ron_id: ron_id,
+        ginny_id: ginny_id
+      }
+    end
+
+    test "should return user (parent) struct with children preloaded by parent's first name", %{
+      molly_id: molly_id,
+      ron_id: ron_id,
+      ginny_id: ginny_id
+    } do
+      assert %User{id: ^molly_id, children: [child_1, child_2]} =
+               Accounts.get_parent_with_children_by(:first_name, "Molly")
+
+      assert %Child{id: ^ron_id} = child_1
+      assert %Child{id: ^ginny_id} = child_2
+    end
+
+    test "should return user (parent) struct with children preloaded by parent's id", %{
+      molly_id: molly_id,
+      ron_id: ron_id,
+      ginny_id: ginny_id
+    } do
+      assert %User{id: ^molly_id, children: [child_1, child_2]} = Accounts.get_parent_with_children_by(:id, molly_id)
+
+      assert %Child{id: ^ron_id} = child_1
+      assert %Child{id: ^ginny_id} = child_2
+    end
+
+    test "should return nil if cannot find parent" do
+      assert nil == Accounts.get_parent_with_children_by(:first_name, "someone not in the database")
+
     end
   end
 end

@@ -33,7 +33,11 @@ defmodule Babysitting.Transactions.Transaction do
     if DateTime.compare(start_datetime, end_datetime) == :lt do
       changeset
     else
-      add_error(changeset, :start, "Start of caregiving time must be before end of caregiving time.")
+      add_error(
+        changeset,
+        :start,
+        "Start of caregiving time must be before end of caregiving time."
+      )
     end
   end
 
@@ -51,7 +55,7 @@ defmodule Babysitting.Transactions.Transaction do
   end
 
   defp seconds_to_hours(seconds) do
-    seconds / 60 / 60 |> Float.round(@decimal_preciscion)
+    (seconds / 60 / 60) |> Float.round(@decimal_preciscion)
   end
 
   defp start_end_times(changeset) do
