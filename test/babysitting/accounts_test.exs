@@ -113,15 +113,16 @@ defmodule Babysitting.AccountsTest do
       ron_id: ron_id,
       ginny_id: ginny_id
     } do
-      assert %User{id: ^molly_id, children: [child_1, child_2]} = Accounts.get_parent_with_children_by(:id, molly_id)
+      assert %User{id: ^molly_id, children: [child_1, child_2]} =
+               Accounts.get_parent_with_children_by(:id, molly_id)
 
       assert %Child{id: ^ron_id} = child_1
       assert %Child{id: ^ginny_id} = child_2
     end
 
     test "should return nil if cannot find parent" do
-      assert nil == Accounts.get_parent_with_children_by(:first_name, "someone not in the database")
-
+      assert nil ==
+               Accounts.get_parent_with_children_by(:first_name, "someone not in the database")
     end
   end
 end

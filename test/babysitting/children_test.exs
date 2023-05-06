@@ -2,10 +2,9 @@ defmodule Babysitting.ChildrenTest do
   use Babysitting.DataCase
 
   alias Babysitting.Children
+  alias Babysitting.Children.Child
 
   describe "children" do
-    alias Babysitting.Children.Child
-
     @invalid_attrs %{birthday: nil, first_name: nil, gender: nil, last_name: nil}
 
     test "list_children/0 returns all children" do
@@ -66,6 +65,52 @@ defmodule Babysitting.ChildrenTest do
     test "change_child/1 returns a child changeset" do
       child = insert(:child)
       assert %Ecto.Changeset{} = Children.change_child(child)
+    end
+  end
+
+  describe "insert_all_children/1" do
+    test "happy path - inserts all children" do
+      parent = insert(:user)
+      parent_id = parent.id
+
+      child_1_attrs = %{
+        first_name: "Dee",
+        last_name: "Reynolds",
+        birthday: ~D[1984-09-09],
+        gender: :girl
+      }
+
+      child_2_attrs = %{
+        first_name: "Dennis",
+        last_name: "Reynolds",
+        birthday: ~D[1981-10-30],
+        gender: :boy
+      }
+
+      children = [
+        child_1_attrs,
+        child_2_attrs
+      ]
+
+      assert {2, _} = Children.insert_all_children(children, parent)
+
+      assert [child_1, child_2] = Children.list_children()
+
+      assert %Child{
+               birthday: ~D[1984-09-09],
+               first_name: "Dee",
+               gender: :girl,
+               last_name: "Reynolds",
+               parent_id: ^parent_id
+             } = child_1
+
+      assert %Child{
+               birthday: ~D[1981-10-30],
+               first_name: "Dennis",
+               gender: :boy,
+               last_name: "Reynolds",
+               parent_id: ^parent_id
+             } = child_2
     end
   end
 end

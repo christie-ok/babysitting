@@ -101,4 +101,22 @@ defmodule Babysitting.Children do
   def change_child(%Child{} = child, attrs \\ %{}) do
     Child.changeset(child, attrs)
   end
+
+  def insert_all_children(children, parent) do
+    children =
+      Enum.map(
+        children,
+        &Map.merge(&1, %{
+          parent_id: parent.id,
+          inserted_at: {:placeholder, :timestamp},
+          updated_at: {:placeholder, :timestamp}
+        })
+      )
+
+    IO.inspect(children)
+
+    Repo.insert_all(Child, children,
+      placeholders: %{timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)}
+    )
+  end
 end
