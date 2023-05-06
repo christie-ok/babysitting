@@ -113,10 +113,10 @@ defmodule Babysitting.Children do
         })
       )
 
-    IO.inspect(children)
-
     Repo.insert_all(Child, children,
       placeholders: %{timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)}
     )
+  rescue
+    _ -> {:error, "Error inserting children."}
   end
 end

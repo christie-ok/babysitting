@@ -112,5 +112,21 @@ defmodule Babysitting.ChildrenTest do
                parent_id: ^parent_id
              } = child_2
     end
+
+    test "catches error if insert does not work" do
+      parent = insert(:user)
+
+      child_1_attrs = %{
+        first_name: "Dee",
+        last_name: "Reynolds",
+        gender: :girl
+      }
+
+      assert [] == Children.list_children()
+
+      assert {:error, _} = Children.insert_all_children([child_1_attrs], parent)
+
+      assert [] == Children.list_children()
+    end
   end
 end

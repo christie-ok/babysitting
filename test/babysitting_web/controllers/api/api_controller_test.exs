@@ -27,13 +27,14 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/user", body)
 
-      assert {200, _, _} = Plug.Test.sent_resp(conn)
+      assert conn.status == 200
 
       assert [
                %User{
                  id: morticia_id,
                  first_name: "Morticia",
-                 last_name: "Addams"
+                 last_name: "Addams",
+                 hours_bank: 0
                }
              ] = Accounts.list_users()
 
@@ -43,7 +44,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
              ] = Children.list_children()
     end
 
-    test "should not insert resources if data incomplete", %{conn: conn} do
+    test "should not insert resources if parent data incomplete", %{conn: conn} do
       assert [] == Accounts.list_users()
       assert [] == Children.list_children()
 
@@ -62,10 +63,44 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/user", body)
 
-      assert {402, _, "[last_name: {\"can't be blank\", [validation: :required]}]"} =
-               Plug.Test.sent_resp(conn)
+      assert conn.status == 402
+      assert conn.resp_body == "[last_name: {\"can't be blank\", [validation: :required]}]"
 
       assert [] == Accounts.list_users()
+      assert [] == Children.list_children()
+    end
+
+    test "should insert parent, but not children if parent data is complete, but child data is not",
+         %{conn: conn} do
+      assert [] == Accounts.list_users()
+      assert [] == Children.list_children()
+
+      body = %{
+        first_name: "Morticia",
+        last_name: "Addams",
+        children: [
+          %{
+            first_name: "Wednesday",
+            last_name: "Addams",
+            gender: :girl
+          },
+          %{first_name: "Pugsley", last_name: "Addams", gender: :boy}
+        ]
+      }
+
+      conn = post(conn, ~p"/api/user", body)
+
+      assert conn.status == 402
+      assert conn.resp_body == "Error creating children."
+
+      assert [
+               %User{
+                 first_name: "Morticia",
+                 last_name: "Addams",
+                 hours_bank: 0
+               }
+             ] = Accounts.list_users()
+
       assert [] == Children.list_children()
     end
   end
