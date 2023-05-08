@@ -3,7 +3,17 @@ defmodule BabysittingWeb.API.APIController do
 
   alias Babysitting.Accounts
   alias Babysitting.Children
+  alias Babysitting.Repo
   alias Babysitting.Utils
+
+  def index(conn, params) do
+    users =
+      Accounts.list_users()
+      |> Repo.preload([:children])
+      |> Jason.encode!()
+
+    send_resp(conn, 200, users)
+  end
 
   def insert_user_and_children(conn, params) do
     parent_attrs =

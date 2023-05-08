@@ -104,4 +104,52 @@ defmodule BabysittingWeb.API.APIControllerTest do
       assert [] == Children.list_children()
     end
   end
+
+  describe "index/2" do
+    test "returns empty list if no users", %{conn: conn} do
+      body = %{}
+      conn = get(conn, ~p"/api/users", body)
+
+      assert decoded_resp_body(conn) == []
+    end
+
+    test "returns list of maps containing users' names, ids, and hours bank totals", %{conn: conn} do
+      parent = insert(:user, first_name: "Morticia", last_name: "Addams", hours_bank: 10)
+
+      insert(:child,
+        parent: parent,
+        first_name: "Wednesday",
+        last_name: "Addams",
+        gender: :girl,
+        birthday: ~D[2018-09-13]
+      )
+
+      body = %{}
+      conn = get(conn, ~p"/api/users", body)
+
+      assert decoded_resp_body(conn) == [
+               %{
+                 "address" => nil,
+                 "children" => [
+                   %{
+                     "birthday" => "2018-09-13",
+                     "first_name" => "Wednesday",
+                     "gender" => "girl",
+                     "last_name" => "Addams"
+                   }
+                 ],
+                 "city" => nil,
+                 "first_name" => "Morticia",
+                 "hours_bank" => 10,
+                 "last_name" => "Addams",
+                 "state" => nil,
+                 "zip" => nil
+               }
+             ]
+    end
+  end
+
+  defp decoded_resp_body(conn) do
+    Jason.decode!(conn.resp_body)
+  end
 end

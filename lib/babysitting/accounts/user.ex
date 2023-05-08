@@ -2,6 +2,9 @@ defmodule Babysitting.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder,
+           only: [:address, :city, :first_name, :last_name, :state, :zip, :hours_bank, :children]}
+
   schema "users" do
     field :address, :string
     field :city, :string
