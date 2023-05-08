@@ -9,7 +9,7 @@ defmodule Babysitting.Repo.Migrations.CreateUsers do
       add :city, :string
       add :state, :string
       add :zip, :string
-      add :hours_bank, :integer, default: 0
+      add :hours_bank, :float, default: 0.0
 
       timestamps()
     end

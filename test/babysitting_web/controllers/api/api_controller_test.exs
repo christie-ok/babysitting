@@ -5,8 +5,10 @@ defmodule BabysittingWeb.API.APIControllerTest do
   alias Babysitting.Accounts.User
   alias Babysitting.Children
   alias Babysitting.Children.Child
+  alias Babysitting.Transactions
+  alias Babysitting.Transactions.Transaction
 
-  describe "insert_user_and_children/2" do
+  describe "new_user/2" do
     test "happy path - should create user and children, returns 200", %{conn: conn} do
       assert [] == Accounts.list_users()
       assert [] == Children.list_children()
@@ -25,7 +27,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
         ]
       }
 
-      conn = post(conn, ~p"/api/user", body)
+      conn = post(conn, ~p"/api/users/new", body)
 
       assert respose_status(conn, 200)
 
@@ -34,7 +36,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
                  id: morticia_id,
                  first_name: "Morticia",
                  last_name: "Addams",
-                 hours_bank: 0
+                 hours_bank: 0.0
                }
              ] = Accounts.list_users()
 
@@ -61,10 +63,12 @@ defmodule BabysittingWeb.API.APIControllerTest do
         ]
       }
 
-      conn = post(conn, ~p"/api/user", body)
+      conn = post(conn, ~p"/api/users/new", body)
 
       assert respose_status(conn, 402)
-      assert conn.resp_body == "[last_name: {\"can't be blank\", [validation: :required]}]"
+
+      assert decoded_resp_body(conn) ==
+               "[last_name: {\"can't be blank\", [validation: :required]}]"
 
       assert [] == Accounts.list_users()
       assert [] == Children.list_children()
@@ -88,7 +92,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
         ]
       }
 
-      conn = post(conn, ~p"/api/user", body)
+      conn = post(conn, ~p"/api/users/new", body)
 
       assert respose_status(conn, 402)
       assert conn.resp_body == "Error creating children."
@@ -97,7 +101,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
                %User{
                  first_name: "Morticia",
                  last_name: "Addams",
-                 hours_bank: 0
+                 hours_bank: 0.0
                }
              ] = Accounts.list_users()
 
@@ -179,6 +183,60 @@ defmodule BabysittingWeb.API.APIControllerTest do
                "zip" => nil
              }
     end
+  end
+
+  describe "create_new_transaction/2" do
+    test "inserts transaction and updates hours banks", %{conn: conn} do
+      caregiver = insert(:user, id: 111, hours_bank: 10.0)
+      care_getter = insert(:user, id: 222, hours_bank: 10.0)
+
+      body = %{
+        "caregiving_user_id" => caregiver.id,
+        "care_getting_user_id" => care_getter.id,
+        "start" => ~U[2023-05-03 10:00:00Z],
+        "end" => ~U[2023-05-03 14:00:00Z]
+      }
+
+      assert [] = Transactions.list_transactions()
+
+      conn = post(conn, ~p"/api/transactions/new", body)
+
+      assert respose_status(conn, 200)
+
+      assert [%Transaction{}] = Transactions.list_transactions()
+      assert users_hours_bank(caregiver, 14.0)
+      assert users_hours_bank(care_getter, 6.0)
+    end
+
+    test "sends 402 and list of errors if creation of transaction fails", %{conn: conn} do
+      caregiver = insert(:user, id: 111, hours_bank: 10.0)
+      care_getter = insert(:user, id: 222, hours_bank: 10.0)
+
+      body = %{
+        "caregiving_user_id" => caregiver.id,
+        "care_getting_user_id" => nil,
+        "start" => ~U[2023-05-03 10:00:00Z],
+        "end" => ~U[2023-05-03 14:00:00Z]
+      }
+
+      assert [] = Transactions.list_transactions()
+
+      conn = post(conn, ~p"/api/transactions/new", body)
+
+      assert respose_status(conn, 402)
+
+      assert "[care_getting_user_id: {\"can't be blank\", [validation: :required]}]" ==
+               decoded_resp_body(conn)
+
+      assert [] = Transactions.list_transactions()
+      assert users_hours_bank(caregiver, 10.0)
+      assert users_hours_bank(care_getter, 10.0)
+    end
+  end
+
+  defp users_hours_bank(user, hours) do
+    user = Accounts.get_user(user.id)
+    user.hours_bank == hours
   end
 
   defp respose_status(conn, status) do

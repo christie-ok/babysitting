@@ -7,6 +7,7 @@ defmodule Babysitting.Accounts do
   alias Babysitting.Repo
 
   alias Babysitting.Accounts.User
+  alias Babysitting.Transactions.Transaction
 
   @doc """
   Returns the list of users.
@@ -121,5 +122,21 @@ defmodule Babysitting.Accounts do
       lookup
     )
     |> Repo.preload([:children])
+  end
+
+  def update_users_hours_banks(%Transaction{} = transaction) do
+    %{caregiving_user: caregiving_user, care_getting_user: care_getting_user, hours: hours} =
+      Repo.preload(transaction, [:caregiving_user, :care_getting_user])
+
+    add_hours_to_caregiver_bank(caregiving_user, hours)
+    deduct_hours_from_care_getter_bank(care_getting_user, hours)
+  end
+
+  defp add_hours_to_caregiver_bank(caregiver, hours) do
+    update_user(caregiver, %{hours_bank: caregiver.hours_bank + hours})
+  end
+
+  defp deduct_hours_from_care_getter_bank(care_getter, hours) do
+    update_user(care_getter, %{hours_bank: care_getter.hours_bank - hours})
   end
 end

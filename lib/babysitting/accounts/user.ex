@@ -12,7 +12,7 @@ defmodule Babysitting.Accounts.User do
     field :last_name, :string
     field :state, :string
     field :zip, :string
-    field :hours_bank, :integer, default: 0
+    field :hours_bank, :float, default: 0.0
 
     has_many :children, Babysitting.Children.Child, foreign_key: :parent_id
 

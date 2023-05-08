@@ -1,6 +1,7 @@
 defmodule Babysitting.TransactionsTest do
   use Babysitting.DataCase
 
+  alias Babysitting.Accounts
   alias Babysitting.Transactions
   alias Babysitting.Transactions.Transaction
 
@@ -128,5 +129,49 @@ defmodule Babysitting.TransactionsTest do
 
       assert 28.5 == changeset.changes.hours
     end
+  end
+
+  describe "input_transaction/1" do
+    test "happy path - inserts transaction and adjusts users' hours_banks" do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      transaction_attrs = %{
+        start: @wednesday_ten_am,
+        end: @wednesday_two_thirty_pm,
+        caregiving_user_id: caregiver.id,
+        care_getting_user_id: care_getter.id
+      }
+
+      Transactions.input_transaction(transaction_attrs)
+
+      assert users_updated_hours_bank(caregiver, 14.5)
+      assert users_updated_hours_bank(care_getter, 5.5)
+    end
+
+    test "failure to create transaction" do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      transaction_attrs = %{
+        start: @wednesday_ten_am,
+        end: @wednesday_two_thirty_pm,
+        caregiving_user_id: caregiver.id,
+        care_getting_user_id: nil
+      }
+
+      assert {:error, %Ecto.Changeset{valid?: false}} =
+               Transactions.input_transaction(transaction_attrs)
+
+      assert [] == Transactions.list_transactions()
+      assert users_updated_hours_bank(caregiver, 10.0)
+      assert users_updated_hours_bank(care_getter, 10.0)
+    end
+  end
+
+  defp users_updated_hours_bank(user, hours) do
+    user = Accounts.get_user(user.id)
+
+    user.hours_bank == hours
   end
 end

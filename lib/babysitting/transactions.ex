@@ -8,6 +8,21 @@ defmodule Babysitting.Transactions do
 
   alias Babysitting.Transactions.Transaction
 
+  defdelegate update_users_hours_banks(transaction), to: Babysitting.Accounts
+
+  def input_transaction(attrs \\ %{}) do
+    Repo.transaction(fn ->
+      case create_transaction(attrs) do
+        {:ok, transaction} ->
+          update_users_hours_banks(transaction)
+          transaction
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
   @doc """
   Returns the list of transactions.
 

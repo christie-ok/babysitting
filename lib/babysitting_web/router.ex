@@ -42,9 +42,10 @@ defmodule BabysittingWeb.Router do
   end
 
   scope "/api", BabysittingWeb.API do
-    get("/users", APIController, :index)
-    get("/users/:id", APIController, :show)
-    post("/user", APIController, :insert_user_and_children)
+    get("/users", APIController, :index_users)
+    get("/users/:id", APIController, :show_user)
+    post("/users/new", APIController, :create_new_user)
+    post("/transactions/new", APIController, :create_new_transaction)
     # delete("/:resource", APIController, :destroy_all)
   end
 

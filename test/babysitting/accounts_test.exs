@@ -125,4 +125,25 @@ defmodule Babysitting.AccountsTest do
                Accounts.get_parent_with_children_by(:first_name, "someone not in the database")
     end
   end
+
+  describe "update_users_hours_banks/1" do
+    test "adds hours to caregiver's bank, subtracts hours from care getter's bank" do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      transaction =
+        insert(:transaction, care_getting_user: care_getter, caregiving_user: caregiver, hours: 2)
+
+      Accounts.update_users_hours_banks(transaction)
+
+      assert users_updated_hours_bank(caregiver, 12)
+      assert users_updated_hours_bank(care_getter, 8)
+    end
+  end
+
+  defp users_updated_hours_bank(user, hours) do
+    user = Accounts.get_user(user.id)
+
+    user.hours_bank == hours
+  end
 end
