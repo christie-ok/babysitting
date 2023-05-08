@@ -27,7 +27,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/user", body)
 
-      assert conn.status == 200
+      assert respose_status(conn, 200)
 
       assert [
                %User{
@@ -63,7 +63,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/user", body)
 
-      assert conn.status == 402
+      assert respose_status(conn, 402)
       assert conn.resp_body == "[last_name: {\"can't be blank\", [validation: :required]}]"
 
       assert [] == Accounts.list_users()
@@ -90,7 +90,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/user", body)
 
-      assert conn.status == 402
+      assert respose_status(conn, 402)
       assert conn.resp_body == "Error creating children."
 
       assert [
@@ -110,6 +110,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
       body = %{}
       conn = get(conn, ~p"/api/users", body)
 
+      assert respose_status(conn, 200)
       assert decoded_resp_body(conn) == []
     end
 
@@ -126,6 +127,8 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       body = %{}
       conn = get(conn, ~p"/api/users", body)
+
+      assert respose_status(conn, 200)
 
       assert decoded_resp_body(conn) == [
                %{
@@ -147,6 +150,39 @@ defmodule BabysittingWeb.API.APIControllerTest do
                }
              ]
     end
+  end
+
+  describe "show/2" do
+    test "returns 404 if user not found", %{conn: conn} do
+      body = %{}
+      conn = get(conn, ~p"/api/users/1", body)
+
+      assert respose_status(conn, 404)
+    end
+
+    test "happy path - returns user and 200", %{conn: conn} do
+      insert(:user, id: 13, first_name: "Morticia", last_name: "Addams", hours_bank: 10)
+
+      body = %{}
+      conn = get(conn, ~p"/api/users/13", body)
+
+      assert respose_status(conn, 200)
+
+      assert decoded_resp_body(conn) == %{
+               "address" => nil,
+               "children" => [],
+               "city" => nil,
+               "first_name" => "Morticia",
+               "hours_bank" => 10,
+               "last_name" => "Addams",
+               "state" => nil,
+               "zip" => nil
+             }
+    end
+  end
+
+  defp respose_status(conn, status) do
+    conn.status == status
   end
 
   defp decoded_resp_body(conn) do

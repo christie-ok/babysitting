@@ -6,13 +6,30 @@ defmodule BabysittingWeb.API.APIController do
   alias Babysitting.Repo
   alias Babysitting.Utils
 
-  def index(conn, params) do
+  def index(conn, _params) do
     users =
       Accounts.list_users()
       |> Repo.preload([:children])
       |> Jason.encode!()
 
     send_resp(conn, 200, users)
+  end
+
+  def show(conn, params) do
+    %{"id" => parent_id} = params
+
+    case Accounts.get_user(parent_id) do
+      nil ->
+        send_resp(conn, 404, "User not found.")
+
+      user ->
+        user =
+          user
+          |> Repo.preload([:children])
+          |> Jason.encode!()
+
+        send_resp(conn, 200, user)
+    end
   end
 
   def insert_user_and_children(conn, params) do
