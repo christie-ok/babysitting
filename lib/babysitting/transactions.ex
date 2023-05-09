@@ -9,6 +9,7 @@ defmodule Babysitting.Transactions do
   alias Babysitting.Transactions.Transaction
 
   defdelegate update_users_hours_banks(transaction), to: Babysitting.Accounts
+  defdelegate restore_users_hours_banks(transaction), to: Babysitting.Accounts
 
   def input_transaction(attrs \\ %{}) do
     Repo.transaction(fn ->
@@ -16,6 +17,22 @@ defmodule Babysitting.Transactions do
         {:ok, transaction} ->
           update_users_hours_banks(transaction)
           transaction
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  def edit_transaction(transaction_id, attrs) do
+    transaction = get_transaction!(transaction_id)
+
+    Repo.transaction(fn ->
+      case update_transaction(transaction, attrs) do
+        {:ok, transaction_updated} ->
+          restore_users_hours_banks(transaction)
+          update_users_hours_banks(transaction_updated)
+          transaction_updated
 
         {:error, changeset} ->
           Repo.rollback(changeset)
@@ -50,6 +67,12 @@ defmodule Babysitting.Transactions do
       ** (Ecto.NoResultsError)
 
   """
+  def get_transaction!(id) when is_binary(id) do
+    id = String.to_integer(id)
+
+    get_transaction!(id)
+  end
+
   def get_transaction!(id), do: Repo.get!(Transaction, id)
 
   @doc """

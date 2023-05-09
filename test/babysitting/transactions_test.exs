@@ -8,6 +8,7 @@ defmodule Babysitting.TransactionsTest do
   @tuesday_ten_am ~U[2023-05-02 10:00:00Z]
   @wednesday_ten_am ~U[2023-05-03 10:00:00Z]
   @wednesday_two_thirty_pm ~U[2023-05-03 14:30:00Z]
+  @wednesday_four_pm ~U[2023-05-03 16:00:00Z]
 
   describe "transactions" do
     test "list_transactions/0 returns all transactions" do
@@ -166,6 +167,93 @@ defmodule Babysitting.TransactionsTest do
       assert [] == Transactions.list_transactions()
       assert users_updated_hours_bank(caregiver, 10.0)
       assert users_updated_hours_bank(care_getter, 10.0)
+    end
+  end
+
+  describe "edit_transaction/1" do
+    test "sames users, change in horus - updates transaction and adjusts users hours" do
+      caregiver = insert(:user, hours_bank: 14.5)
+      care_getter = insert(:user, hours_bank: 5.5)
+
+      existing_transaction =
+        insert(:transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: @wednesday_ten_am,
+          end: @wednesday_two_thirty_pm,
+          hours: 4.5
+        )
+
+      new_attrs = %{
+        caregiving_user_id: caregiver.id,
+        care_getting_user_id: care_getter.id,
+        start: @wednesday_ten_am,
+        end: @wednesday_four_pm
+      }
+
+      assert {:ok, %Transaction{hours: 6.0}} =
+               Transactions.edit_transaction(existing_transaction.id, new_attrs)
+
+      assert users_updated_hours_bank(caregiver, 16.0)
+      assert users_updated_hours_bank(care_getter, 4.0)
+    end
+
+    test "different users - updates transaction and adjusts users hours" do
+      caregiver = insert(:user, hours_bank: 10.0)
+      wrong_care_getter = insert(:user, hours_bank: 10.0)
+      correct_care_getter = insert(:user, hours_bank: 10.0)
+      correct_care_getter_id = correct_care_getter.id
+
+      existing_transaction =
+        insert(:transaction,
+          caregiving_user: caregiver,
+          care_getting_user: wrong_care_getter,
+          start: @wednesday_ten_am,
+          end: @wednesday_two_thirty_pm,
+          hours: 4.5
+        )
+
+      new_attrs = %{
+        caregiving_user_id: caregiver.id,
+        care_getting_user_id: correct_care_getter.id,
+        start: @wednesday_ten_am,
+        end: @wednesday_two_thirty_pm
+      }
+
+      assert {:ok, %Transaction{care_getting_user_id: ^correct_care_getter_id}} =
+               Transactions.edit_transaction(existing_transaction.id, new_attrs)
+
+      assert users_updated_hours_bank(caregiver, 10.0)
+      assert users_updated_hours_bank(wrong_care_getter, 14.5)
+      assert users_updated_hours_bank(correct_care_getter, 5.5)
+    end
+
+    test "no changes if update fails" do
+      caregiver = insert(:user, hours_bank: 14.5)
+      care_getter = insert(:user, hours_bank: 5.5)
+
+      existing_transaction =
+        insert(:transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: @wednesday_ten_am,
+          end: @wednesday_two_thirty_pm,
+          hours: 4.5
+        )
+
+      new_attrs = %{
+        caregiving_user: caregiver,
+        care_getting_user: care_getter,
+        start: @wednesday_four_pm,
+        end: @wednesday_ten_am
+      }
+
+      assert {:error, _} = Transactions.edit_transaction(existing_transaction.id, new_attrs)
+
+      assert %Transaction{hours: 4.5} = Transactions.get_transaction!(existing_transaction.id)
+
+      assert users_updated_hours_bank(caregiver, 14.5)
+      assert users_updated_hours_bank(care_getter, 5.5)
     end
   end
 

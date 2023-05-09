@@ -28,7 +28,7 @@ defmodule BabysittingWeb.API.APIController do
     parent_attrs =
       Map.take(params, ["first_name", "last_name", "address", "city", "state", "zip"])
 
-      save_resource(&Accounts.create_user/1, parent_attrs, conn)
+    save_resource(&Accounts.create_user/1, parent_attrs, conn)
   end
 
   def create_new_child(conn, params) do
@@ -42,20 +42,29 @@ defmodule BabysittingWeb.API.APIController do
       Map.take(params, ["caregiving_user_id", "care_getting_user_id", "start", "end"])
       |> Utils.atomize_keys()
 
-      save_resource(&Transactions.input_transaction/1, transaction_attrs, conn)
+    save_resource(&Transactions.input_transaction/1, transaction_attrs, conn)
+  end
 
-    # case Transactions.input_transaction(transaction_attrs) do
-    #   {:ok, _transaction} ->
-    #     send_resp(conn, 200, [])
+  def edit_transaction(conn, params) do
+    %{"id" => transaction_id} = params
 
-    #   {:error, changeset} ->
-    #     send_resp(conn, 402, encode_errors(changeset))
-    # end
+    updated_attrs =
+      Map.take(params, ["caregiving_user_id", "care_getting_user_id", "start", "end"])
+
+    case Transactions.edit_transaction(transaction_id, updated_attrs) do
+      {:ok, _} ->
+        send_resp(conn, 200, [])
+
+      {:error, changeset} ->
+        send_resp(conn, 402, encode_errors(changeset))
+    end
   end
 
   defp save_resource(f, attrs, conn) do
-     case f.(attrs) do
-      {:ok, _} -> send_resp(conn, 200, [])
+    case f.(attrs) do
+      {:ok, _} ->
+        send_resp(conn, 200, [])
+
       {:error, changeset} ->
         send_resp(conn, 402, encode_errors(changeset))
     end

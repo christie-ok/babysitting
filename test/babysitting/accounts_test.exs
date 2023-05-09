@@ -141,6 +141,21 @@ defmodule Babysitting.AccountsTest do
     end
   end
 
+  describe "restore_users_hours_banks/1" do
+    test "substracts hours from caregiver's bank, adds hours to care getter's bank" do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      transaction =
+        insert(:transaction, care_getting_user: care_getter, caregiving_user: caregiver, hours: 4)
+
+      Accounts.restore_users_hours_banks(transaction)
+
+      assert users_updated_hours_bank(caregiver, 6)
+      assert users_updated_hours_bank(care_getter, 14)
+    end
+  end
+
   defp users_updated_hours_bank(user, hours) do
     user = Accounts.get_user(user.id)
 

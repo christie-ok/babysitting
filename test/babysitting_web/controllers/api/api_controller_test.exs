@@ -209,7 +209,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
       parent = insert(:user)
 
       body = %{
-       first_name: "Harry",
+        first_name: "Harry",
         last_name: "Potter",
         gender: :boy,
         parent_id: parent.id
@@ -222,6 +222,71 @@ defmodule BabysittingWeb.API.APIControllerTest do
       respose_status(conn, 402)
 
       assert [] = Children.list_children()
+    end
+  end
+
+  describe "edit_transaction/2" do
+    test "edits transaction and updates users' hours banks, sends 200", %{conn: conn} do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      existing_transaction =
+        insert(
+          :transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: ~U[2023-05-03 10:00:00Z],
+          end: ~U[2023-05-03 14:00:00Z],
+          hours: 4.0
+        )
+
+      body = %{
+        "caregiving_user_id" => caregiver.id,
+        "care_getting_user_id" => care_getter.id,
+        "start" => ~U[2023-05-03 10:00:00Z],
+        "end" => ~U[2023-05-03 16:00:00Z]
+      }
+
+      conn = patch(conn, ~p"/api/transactions/#{existing_transaction.id}", body)
+
+      assert respose_status(conn, 200)
+
+      assert %Transaction{hours: 6.0} = Transactions.get_transaction!(existing_transaction.id)
+
+      assert users_hours_bank(caregiver, 12.0)
+      assert users_hours_bank(care_getter, 8.0)
+    end
+
+    test "failure path - sends 402 with errors message", %{conn: conn} do
+      caregiver = insert(:user, hours_bank: 10.0)
+      care_getter = insert(:user, hours_bank: 10.0)
+
+      existing_transaction =
+        insert(
+          :transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: ~U[2023-05-03 10:00:00Z],
+          end: ~U[2023-05-03 14:00:00Z],
+          hours: 4.0
+        )
+
+      body = %{
+        "caregiving_user_id" => caregiver.id,
+        "care_getting_user_id" => care_getter.id,
+        "start" => ~U[2023-05-03 16:00:00Z],
+        "end" => ~U[2023-05-03 10:00:00Z]
+      }
+
+      conn = patch(conn, ~p"/api/transactions/#{existing_transaction.id}", body)
+
+      assert respose_status(conn, 402)
+
+      assert %Transaction{start: ~U[2023-05-03 10:00:00Z], end: ~U[2023-05-03 14:00:00Z]} =
+               Transactions.get_transaction!(existing_transaction.id)
+
+      assert users_hours_bank(caregiver, 10.0)
+      assert users_hours_bank(care_getter, 10.0)
     end
   end
 

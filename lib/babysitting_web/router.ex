@@ -47,6 +47,7 @@ defmodule BabysittingWeb.Router do
     post("/users/new", APIController, :create_new_user)
     post("/children/new", APIController, :create_new_child)
     post("/transactions/new", APIController, :create_new_transaction)
+    patch("/transactions/:id", APIController, :edit_transaction)
     # delete("/:resource", APIController, :destroy_all)
   end
 

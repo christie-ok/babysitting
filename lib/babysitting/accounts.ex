@@ -126,17 +126,25 @@ defmodule Babysitting.Accounts do
 
   def update_users_hours_banks(%Transaction{} = transaction) do
     %{caregiving_user: caregiving_user, care_getting_user: care_getting_user, hours: hours} =
+      Repo.preload(transaction, [:caregiving_user, :care_getting_user], force: true)
+
+    add_hours_to_bank(caregiving_user, hours)
+    deduct_hours_from_bank(care_getting_user, hours)
+  end
+
+  def restore_users_hours_banks(%Transaction{} = transaction) do
+    %{caregiving_user: caregiving_user, care_getting_user: care_getting_user, hours: hours} =
       Repo.preload(transaction, [:caregiving_user, :care_getting_user])
 
-    add_hours_to_caregiver_bank(caregiving_user, hours)
-    deduct_hours_from_care_getter_bank(care_getting_user, hours)
+    add_hours_to_bank(care_getting_user, hours)
+    deduct_hours_from_bank(caregiving_user, hours)
   end
 
-  defp add_hours_to_caregiver_bank(caregiver, hours) do
-    update_user(caregiver, %{hours_bank: caregiver.hours_bank + hours})
+  defp add_hours_to_bank(user, hours) do
+    update_user(user, %{hours_bank: user.hours_bank + hours})
   end
 
-  defp deduct_hours_from_care_getter_bank(care_getter, hours) do
-    update_user(care_getter, %{hours_bank: care_getter.hours_bank - hours})
+  defp deduct_hours_from_bank(user, hours) do
+    update_user(user, %{hours_bank: user.hours_bank - hours})
   end
 end
