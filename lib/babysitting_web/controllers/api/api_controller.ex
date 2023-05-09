@@ -31,6 +31,18 @@ defmodule BabysittingWeb.API.APIController do
     save_resource(&Accounts.create_user/1, parent_attrs, conn)
   end
 
+  def edit_user(conn, params) do
+    %{"id" => user_id} = params
+
+    update_attrs =
+      Map.take(params, ["first_name", "last_name", "address", "city", "state", "zip"])
+
+    case Accounts.update_user(user_id, update_attrs) do
+      {:ok, _} -> send_resp(conn, 200, [])
+      {:error, changeset} -> send_resp(conn, 402, encode_errors(changeset))
+    end
+  end
+
   def create_new_child(conn, params) do
     child_attrs = Map.take(params, ["birthday", "first_name", "last_name", "gender", "parent_id"])
 

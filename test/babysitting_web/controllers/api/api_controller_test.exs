@@ -290,6 +290,32 @@ defmodule BabysittingWeb.API.APIControllerTest do
     end
   end
 
+  describe "edit_user/2" do
+    test "edits user and returns 200", %{conn: conn} do
+      user = insert(:user, first_name: "Leia", last_name: "Organa")
+
+      body = %{last_name: "Organa-Solo"}
+
+      conn = patch(conn, ~p"/api/users/#{user.id}", body)
+
+      respose_status(conn, 200)
+
+      assert %User{last_name: "Organa-Solo"} = Accounts.get_user!(user.id)
+    end
+
+    test "no change to user and returns 402 if update fails", %{conn: conn} do
+      user = insert(:user, first_name: "Leia", last_name: "Organa")
+
+      body = %{last_name: 123}
+
+      conn = patch(conn, ~p"/api/users/#{user.id}", body)
+
+      assert respose_status(conn, 402)
+
+      assert %User{last_name: "Organa"} = Accounts.get_user!(user.id)
+    end
+  end
+
   defp users_hours_bank(user, hours) do
     user = Accounts.get_user(user.id)
     user.hours_bank == hours

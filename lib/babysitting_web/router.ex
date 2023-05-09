@@ -42,19 +42,17 @@ defmodule BabysittingWeb.Router do
   end
 
   scope "/api", BabysittingWeb.API do
+    pipe_through :api
+
     get("/users", APIController, :index_users)
     get("/users/:id", APIController, :show_user)
     post("/users/new", APIController, :create_new_user)
+    patch("/users/:id", APIController, :edit_user)
     post("/children/new", APIController, :create_new_child)
     post("/transactions/new", APIController, :create_new_transaction)
     patch("/transactions/:id", APIController, :edit_transaction)
     # delete("/:resource", APIController, :destroy_all)
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", BabysittingWeb do
-  #   pipe_through :api
-  # end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:babysitting, :dev_routes) do

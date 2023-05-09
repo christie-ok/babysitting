@@ -70,6 +70,12 @@ defmodule Babysitting.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  def update_user(user_id, attrs) when is_binary(user_id) do
+    user = get_user!(user_id)
+
+    update_user(user, attrs)
+  end
+
   def update_user(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
