@@ -257,6 +257,31 @@ defmodule Babysitting.TransactionsTest do
     end
   end
 
+  describe "undo_transaction/1" do
+    test "happy path - deletes transaction and restores users hours" do
+      caregiver = insert(:user, hours_bank: 14.5)
+      care_getter = insert(:user, hours_bank: 5.5)
+
+      existing_transaction =
+        insert(:transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: @wednesday_ten_am,
+          end: @wednesday_two_thirty_pm,
+          hours: 4.5
+        )
+
+      assert {:ok, _} = Transactions.undo_transaction(existing_transaction.id)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Transactions.get_transaction!(existing_transaction.id)
+      end
+
+      users_updated_hours_bank(caregiver, 10.0)
+      users_updated_hours_bank(care_getter, 10.0)
+    end
+  end
+
   defp users_updated_hours_bank(user, hours) do
     user = Accounts.get_user(user.id)
 

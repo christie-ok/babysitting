@@ -40,6 +40,21 @@ defmodule Babysitting.Transactions do
     end)
   end
 
+  def undo_transaction(transaction_id) do
+    transaction = get_transaction!(transaction_id)
+
+    Repo.transaction(fn ->
+      case delete_transaction(transaction) do
+        {:ok, transaction} ->
+          restore_users_hours_banks(transaction)
+          transaction
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
   @doc """
   Returns the list of transactions.
 

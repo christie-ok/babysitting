@@ -51,7 +51,7 @@ defmodule BabysittingWeb.Router do
     post("/children/new", APIController, :create_new_child)
     post("/transactions/new", APIController, :create_new_transaction)
     patch("/transactions/:id", APIController, :edit_transaction)
-    # delete("/:resource", APIController, :destroy_all)
+    delete("/transactions/:id", APIController, :delete_transaction)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

@@ -316,6 +316,31 @@ defmodule BabysittingWeb.API.APIControllerTest do
     end
   end
 
+  describe "delete_transaction/2" do
+    test "deletes transaction and restores users hours, returns 200", %{conn: conn} do
+      caregiver = insert(:user, hours_bank: 50.0)
+      care_getter = insert(:user, hours_bank: 30.0)
+
+      transaction =
+        insert(
+          :transaction,
+          caregiving_user: caregiver,
+          care_getting_user: care_getter,
+          start: ~U[2023-05-03 10:00:00Z],
+          end: ~U[2023-05-03 14:00:00Z],
+          hours: 4.0
+        )
+
+      conn = delete(conn, ~p"/api/transactions/#{transaction.id}", %{})
+
+      assert respose_status(conn, 200)
+
+      assert_raise Ecto.NoResultsError, fn -> Transactions.get_transaction!(transaction.id) end
+      assert users_hours_bank(caregiver, 46.0)
+      assert users_hours_bank(care_getter, 34.0)
+    end
+  end
+
   defp users_hours_bank(user, hours) do
     user = Accounts.get_user(user.id)
     user.hours_bank == hours

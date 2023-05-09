@@ -72,6 +72,18 @@ defmodule BabysittingWeb.API.APIController do
     end
   end
 
+  def delete_transaction(conn, params) do
+    %{"id" => transaction_id} = params
+
+    case Transactions.undo_transaction(transaction_id) do
+      {:ok, _} ->
+        send_resp(conn, 200, [])
+
+      {:error, changeset} ->
+        send_resp(conn, 402, encode_errors(changeset))
+    end
+  end
+
   defp save_resource(f, attrs, conn) do
     case f.(attrs) do
       {:ok, _} ->
