@@ -25,12 +25,14 @@ defmodule Babysitting.TransactionsTest do
     test "create_transaction/1 with valid data creates a transaction" do
       caregiver = insert(:user)
       care_getter = insert(:user)
+      child = insert(:child, parent: care_getter)
 
       valid_attrs = %{
         start: @wednesday_ten_am,
         end: @wednesday_two_thirty_pm,
         caregiving_user_id: caregiver.id,
-        care_getting_user_id: care_getter.id
+        care_getting_user_id: care_getter.id,
+        child_ids: [child.id]
       }
 
       assert {:ok, %Transaction{} = transaction} = Transactions.create_transaction(valid_attrs)

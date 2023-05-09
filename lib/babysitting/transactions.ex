@@ -68,6 +68,8 @@ defmodule Babysitting.Transactions do
   def get_transaction!(id), do: Repo.get!(Transaction, id)
 
   def create_transaction(attrs \\ %{}) do
+    %{child_ids: child_ids} = attrs
+
     %Transaction{}
     |> Transaction.changeset(attrs)
     |> Repo.insert()

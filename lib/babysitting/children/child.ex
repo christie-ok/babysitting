@@ -12,6 +12,8 @@ defmodule Babysitting.Children.Child do
     field :gender, Ecto.Enum, values: [:girl, :boy, :other, :decline_to_state]
     field :last_name, :string
 
+    many_to_many :transactions, Babysitting.Transactions.Transaction, join_through: "transactions_children"
+
     belongs_to :parent, User
 
     timestamps()

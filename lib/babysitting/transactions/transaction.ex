@@ -22,6 +22,8 @@ defmodule Babysitting.Transactions.Transaction do
     field :start, :utc_datetime
     field :end, :utc_datetime
 
+    many_to_many :children, Babysitting.Children.Child, join_through: "transactions_children"
+
     belongs_to :caregiving_user, User
     belongs_to :care_getting_user, User
 
