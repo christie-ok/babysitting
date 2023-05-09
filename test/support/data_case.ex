@@ -25,6 +25,7 @@ defmodule Babysitting.DataCase do
       import Ecto.Query
       import Babysitting.DataCase
       import Babysitting.Factory
+      import Babysitting.TestUtils
     end
   end
 

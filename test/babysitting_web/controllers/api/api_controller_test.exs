@@ -328,11 +328,6 @@ defmodule BabysittingWeb.API.APIControllerTest do
     end
   end
 
-  defp users_hours_bank(user, hours) do
-    user = Accounts.get_user(user.id)
-    user.hours_bank == hours
-  end
-
   defp response_status(conn, status) do
     conn.status == status
   end

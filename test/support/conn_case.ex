@@ -29,6 +29,7 @@ defmodule BabysittingWeb.ConnCase do
       import Phoenix.ConnTest
       import BabysittingWeb.ConnCase
       import Babysitting.Factory
+      import Babysitting.TestUtils
     end
   end
 

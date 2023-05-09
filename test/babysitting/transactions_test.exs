@@ -1,7 +1,6 @@
 defmodule Babysitting.TransactionsTest do
   use Babysitting.DataCase
 
-  alias Babysitting.Accounts
   alias Babysitting.Transactions
   alias Babysitting.Transactions.Transaction
 
@@ -146,8 +145,8 @@ defmodule Babysitting.TransactionsTest do
 
       Transactions.input_transaction(transaction_attrs)
 
-      assert users_updated_hours_bank(caregiver, 14.5)
-      assert users_updated_hours_bank(care_getter, 5.5)
+      assert users_hours_bank(caregiver, 14.5)
+      assert users_hours_bank(care_getter, 5.5)
     end
 
     test "failure to create transaction" do
@@ -165,8 +164,8 @@ defmodule Babysitting.TransactionsTest do
                Transactions.input_transaction(transaction_attrs)
 
       assert [] == Transactions.list_transactions()
-      assert users_updated_hours_bank(caregiver, 10.0)
-      assert users_updated_hours_bank(care_getter, 10.0)
+      assert users_hours_bank(caregiver, 10.0)
+      assert users_hours_bank(care_getter, 10.0)
     end
   end
 
@@ -194,8 +193,8 @@ defmodule Babysitting.TransactionsTest do
       assert {:ok, %Transaction{hours: 6.0}} =
                Transactions.edit_transaction(existing_transaction.id, new_attrs)
 
-      assert users_updated_hours_bank(caregiver, 16.0)
-      assert users_updated_hours_bank(care_getter, 4.0)
+      assert users_hours_bank(caregiver, 16.0)
+      assert users_hours_bank(care_getter, 4.0)
     end
 
     test "different users - updates transaction and adjusts users hours" do
@@ -223,9 +222,9 @@ defmodule Babysitting.TransactionsTest do
       assert {:ok, %Transaction{care_getting_user_id: ^correct_care_getter_id}} =
                Transactions.edit_transaction(existing_transaction.id, new_attrs)
 
-      assert users_updated_hours_bank(caregiver, 10.0)
-      assert users_updated_hours_bank(wrong_care_getter, 14.5)
-      assert users_updated_hours_bank(correct_care_getter, 5.5)
+      assert users_hours_bank(caregiver, 10.0)
+      assert users_hours_bank(wrong_care_getter, 14.5)
+      assert users_hours_bank(correct_care_getter, 5.5)
     end
 
     test "no changes if update fails" do
@@ -252,8 +251,8 @@ defmodule Babysitting.TransactionsTest do
 
       assert %Transaction{hours: 4.5} = Transactions.get_transaction!(existing_transaction.id)
 
-      assert users_updated_hours_bank(caregiver, 14.5)
-      assert users_updated_hours_bank(care_getter, 5.5)
+      assert users_hours_bank(caregiver, 14.5)
+      assert users_hours_bank(care_getter, 5.5)
     end
   end
 
@@ -277,14 +276,8 @@ defmodule Babysitting.TransactionsTest do
         Transactions.get_transaction!(existing_transaction.id)
       end
 
-      users_updated_hours_bank(caregiver, 10.0)
-      users_updated_hours_bank(care_getter, 10.0)
+      assert users_hours_bank(caregiver, 10.0)
+      assert users_hours_bank(caregiver, 10.0)
     end
-  end
-
-  defp users_updated_hours_bank(user, hours) do
-    user = Accounts.get_user(user.id)
-
-    user.hours_bank == hours
   end
 end
