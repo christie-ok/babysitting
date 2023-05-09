@@ -28,16 +28,13 @@ defmodule BabysittingWeb.API.APIController do
     parent_attrs =
       Map.take(params, ["first_name", "last_name", "address", "city", "state", "zip"])
 
-    case Accounts.create_user(parent_attrs) do
-      {:ok, parent} ->
-        case create_children(params["children"], parent) do
-          {:error, _} -> send_resp(conn, 402, "Error creating children.")
-          _ -> send_resp(conn, 200, [])
-        end
+      save_resource(&Accounts.create_user/1, parent_attrs, conn)
+  end
 
-      {:error, changeset} ->
-        send_resp(conn, 402, encode_errors(changeset))
-    end
+  def create_new_child(conn, params) do
+    child_attrs = Map.take(params, ["birthday", "first_name", "last_name", "gender", "parent_id"])
+
+    save_resource(&Children.create_child/1, child_attrs, conn)
   end
 
   def create_new_transaction(conn, params) do
@@ -45,19 +42,23 @@ defmodule BabysittingWeb.API.APIController do
       Map.take(params, ["caregiving_user_id", "care_getting_user_id", "start", "end"])
       |> Utils.atomize_keys()
 
-    case Transactions.input_transaction(transaction_attrs) do
-      {:ok, _transaction} ->
-        send_resp(conn, 200, [])
+      save_resource(&Transactions.input_transaction/1, transaction_attrs, conn)
 
+    # case Transactions.input_transaction(transaction_attrs) do
+    #   {:ok, _transaction} ->
+    #     send_resp(conn, 200, [])
+
+    #   {:error, changeset} ->
+    #     send_resp(conn, 402, encode_errors(changeset))
+    # end
+  end
+
+  defp save_resource(f, attrs, conn) do
+     case f.(attrs) do
+      {:ok, _} -> send_resp(conn, 200, [])
       {:error, changeset} ->
         send_resp(conn, 402, encode_errors(changeset))
     end
-  end
-
-  defp create_children(children, parent) do
-    children
-    |> Enum.map(&Utils.atomize_keys/1)
-    |> Children.insert_all_children(parent)
   end
 
   defp encode_errors(changeset) do

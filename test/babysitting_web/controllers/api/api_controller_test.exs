@@ -8,23 +8,13 @@ defmodule BabysittingWeb.API.APIControllerTest do
   alias Babysitting.Transactions
   alias Babysitting.Transactions.Transaction
 
-  describe "new_user/2" do
-    test "happy path - should create user and children, returns 200", %{conn: conn} do
+  describe "create_new_user/2" do
+    test "happy path - should create user, returns 200", %{conn: conn} do
       assert [] == Accounts.list_users()
-      assert [] == Children.list_children()
 
       body = %{
         first_name: "Morticia",
-        last_name: "Addams",
-        children: [
-          %{
-            first_name: "Wednesday",
-            last_name: "Addams",
-            gender: :girl,
-            birthday: ~D[2018-09-13]
-          },
-          %{first_name: "Pugsley", last_name: "Addams", gender: :boy, birthday: ~D[2021-10-31]}
-        ]
+        last_name: "Addams"
       }
 
       conn = post(conn, ~p"/api/users/new", body)
@@ -33,17 +23,11 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       assert [
                %User{
-                 id: morticia_id,
                  first_name: "Morticia",
                  last_name: "Addams",
                  hours_bank: 0.0
                }
              ] = Accounts.list_users()
-
-      assert [
-               %Child{first_name: "Wednesday", last_name: "Addams", parent_id: ^morticia_id},
-               %Child{first_name: "Pugsley", last_name: "Addams", parent_id: ^morticia_id}
-             ] = Children.list_children()
     end
 
     test "should not insert resources if parent data incomplete", %{conn: conn} do
@@ -71,40 +55,6 @@ defmodule BabysittingWeb.API.APIControllerTest do
                "[last_name: {\"can't be blank\", [validation: :required]}]"
 
       assert [] == Accounts.list_users()
-      assert [] == Children.list_children()
-    end
-
-    test "should insert parent, but not children if parent data is complete, but child data is not",
-         %{conn: conn} do
-      assert [] == Accounts.list_users()
-      assert [] == Children.list_children()
-
-      body = %{
-        first_name: "Morticia",
-        last_name: "Addams",
-        children: [
-          %{
-            first_name: "Wednesday",
-            last_name: "Addams",
-            gender: :girl
-          },
-          %{first_name: "Pugsley", last_name: "Addams", gender: :boy}
-        ]
-      }
-
-      conn = post(conn, ~p"/api/users/new", body)
-
-      assert respose_status(conn, 402)
-      assert conn.resp_body == "Error creating children."
-
-      assert [
-               %User{
-                 first_name: "Morticia",
-                 last_name: "Addams",
-                 hours_bank: 0.0
-               }
-             ] = Accounts.list_users()
-
       assert [] == Children.list_children()
     end
   end
@@ -231,6 +181,47 @@ defmodule BabysittingWeb.API.APIControllerTest do
       assert [] = Transactions.list_transactions()
       assert users_hours_bank(caregiver, 10.0)
       assert users_hours_bank(care_getter, 10.0)
+    end
+  end
+
+  describe "create_new_child/2" do
+    test "happy path - creates child and returns 200", %{conn: conn} do
+      parent = insert(:user)
+
+      body = %{
+        birthday: ~D[2020-12-15],
+        first_name: "Harry",
+        last_name: "Potter",
+        gender: :boy,
+        parent_id: parent.id
+      }
+
+      assert [] == Children.list_children()
+
+      conn = post(conn, ~p"/api/children/new", body)
+
+      respose_status(conn, 200)
+
+      assert [%Child{}] = Children.list_children()
+    end
+
+    test "fail path - returns 402 if insert unsuccessful", %{conn: conn} do
+      parent = insert(:user)
+
+      body = %{
+       first_name: "Harry",
+        last_name: "Potter",
+        gender: :boy,
+        parent_id: parent.id
+      }
+
+      assert [] == Children.list_children()
+
+      conn = post(conn, ~p"/api/children/new", body)
+
+      respose_status(conn, 402)
+
+      assert [] = Children.list_children()
     end
   end
 
