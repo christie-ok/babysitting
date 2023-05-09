@@ -19,7 +19,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/users/new", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert [
                %User{
@@ -32,39 +32,26 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
     test "should not insert resources if parent data incomplete", %{conn: conn} do
       assert [] == Accounts.list_users()
-      assert [] == Children.list_children()
 
-      body = %{
-        first_name: "Morticia",
-        children: [
-          %{
-            first_name: "Wednesday",
-            last_name: "Addams",
-            gender: :girl,
-            birthday: ~D[2018-09-13]
-          },
-          %{first_name: "Pugsley", last_name: "Addams", gender: :boy, birthday: ~D[2021-10-31]}
-        ]
-      }
+      body = %{first_name: "Morticia"}
 
       conn = post(conn, ~p"/api/users/new", body)
 
-      assert respose_status(conn, 402)
+      assert response_status(conn, 402)
 
       assert decoded_resp_body(conn) ==
                "[last_name: {\"can't be blank\", [validation: :required]}]"
 
       assert [] == Accounts.list_users()
-      assert [] == Children.list_children()
     end
   end
 
-  describe "index/2" do
+  describe "index_users/2" do
     test "returns empty list if no users", %{conn: conn} do
       body = %{}
       conn = get(conn, ~p"/api/users", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
       assert decoded_resp_body(conn) == []
     end
 
@@ -82,7 +69,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
       body = %{}
       conn = get(conn, ~p"/api/users", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert decoded_resp_body(conn) == [
                %{
@@ -111,7 +98,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
       body = %{}
       conn = get(conn, ~p"/api/users/1", body)
 
-      assert respose_status(conn, 404)
+      assert response_status(conn, 404)
     end
 
     test "happy path - returns user and 200", %{conn: conn} do
@@ -120,7 +107,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
       body = %{}
       conn = get(conn, ~p"/api/users/13", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert decoded_resp_body(conn) == %{
                "address" => nil,
@@ -151,7 +138,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/transactions/new", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert [%Transaction{}] = Transactions.list_transactions()
       assert users_hours_bank(caregiver, 14.0)
@@ -173,7 +160,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/transactions/new", body)
 
-      assert respose_status(conn, 402)
+      assert response_status(conn, 402)
 
       assert "[care_getting_user_id: {\"can't be blank\", [validation: :required]}]" ==
                decoded_resp_body(conn)
@@ -200,7 +187,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/children/new", body)
 
-      respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert [%Child{}] = Children.list_children()
     end
@@ -219,7 +206,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = post(conn, ~p"/api/children/new", body)
 
-      respose_status(conn, 402)
+      assert response_status(conn, 402)
 
       assert [] = Children.list_children()
     end
@@ -249,7 +236,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = patch(conn, ~p"/api/transactions/#{existing_transaction.id}", body)
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert %Transaction{hours: 6.0} = Transactions.get_transaction!(existing_transaction.id)
 
@@ -280,7 +267,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = patch(conn, ~p"/api/transactions/#{existing_transaction.id}", body)
 
-      assert respose_status(conn, 402)
+      assert response_status(conn, 402)
 
       assert %Transaction{start: ~U[2023-05-03 10:00:00Z], end: ~U[2023-05-03 14:00:00Z]} =
                Transactions.get_transaction!(existing_transaction.id)
@@ -298,7 +285,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = patch(conn, ~p"/api/users/#{user.id}", body)
 
-      respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert %User{last_name: "Organa-Solo"} = Accounts.get_user!(user.id)
     end
@@ -310,7 +297,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = patch(conn, ~p"/api/users/#{user.id}", body)
 
-      assert respose_status(conn, 402)
+      assert response_status(conn, 402)
 
       assert %User{last_name: "Organa"} = Accounts.get_user!(user.id)
     end
@@ -333,7 +320,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       conn = delete(conn, ~p"/api/transactions/#{transaction.id}", %{})
 
-      assert respose_status(conn, 200)
+      assert response_status(conn, 200)
 
       assert_raise Ecto.NoResultsError, fn -> Transactions.get_transaction!(transaction.id) end
       assert users_hours_bank(caregiver, 46.0)
@@ -346,7 +333,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
     user.hours_bank == hours
   end
 
-  defp respose_status(conn, status) do
+  defp response_status(conn, status) do
     conn.status == status
   end
 

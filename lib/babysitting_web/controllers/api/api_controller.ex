@@ -5,7 +5,10 @@ defmodule BabysittingWeb.API.APIController do
   alias Babysitting.Children
   alias Babysitting.Repo
   alias Babysitting.Transactions
-  alias Babysitting.Utils
+
+  @child_attrs ["birthday", "first_name", "last_name", "gender", "parent_id"]
+  @parent_attrs ["first_name", "last_name", "address", "city", "state", "zip"]
+  @transaction_attrs ["caregiving_user_id", "care_getting_user_id", "start", "end"]
 
   def index_users(conn, _params) do
     users =
@@ -25,8 +28,7 @@ defmodule BabysittingWeb.API.APIController do
   end
 
   def create_new_user(conn, params) do
-    parent_attrs =
-      Map.take(params, ["first_name", "last_name", "address", "city", "state", "zip"])
+    parent_attrs = Map.take(params, @parent_attrs)
 
     save_resource(&Accounts.create_user/1, parent_attrs, conn)
   end
@@ -34,25 +36,19 @@ defmodule BabysittingWeb.API.APIController do
   def edit_user(conn, params) do
     %{"id" => user_id} = params
 
-    update_attrs =
-      Map.take(params, ["first_name", "last_name", "address", "city", "state", "zip"])
+    update_attrs = Map.take(params, @parent_attrs)
 
-    case Accounts.update_user(user_id, update_attrs) do
-      {:ok, _} -> send_resp(conn, 200, [])
-      {:error, changeset} -> send_resp(conn, 402, encode_errors(changeset))
-    end
+    update_resource(&Accounts.update_user/2, user_id, update_attrs, conn)
   end
 
   def create_new_child(conn, params) do
-    child_attrs = Map.take(params, ["birthday", "first_name", "last_name", "gender", "parent_id"])
+    child_attrs = Map.take(params, @child_attrs)
 
     save_resource(&Children.create_child/1, child_attrs, conn)
   end
 
   def create_new_transaction(conn, params) do
-    transaction_attrs =
-      Map.take(params, ["caregiving_user_id", "care_getting_user_id", "start", "end"])
-      |> Utils.atomize_keys()
+    transaction_attrs = Map.take(params, @transaction_attrs)
 
     save_resource(&Transactions.input_transaction/1, transaction_attrs, conn)
   end
@@ -60,10 +56,15 @@ defmodule BabysittingWeb.API.APIController do
   def edit_transaction(conn, params) do
     %{"id" => transaction_id} = params
 
-    updated_attrs =
-      Map.take(params, ["caregiving_user_id", "care_getting_user_id", "start", "end"])
+    updated_attrs = Map.take(params, @transaction_attrs)
 
-    case Transactions.edit_transaction(transaction_id, updated_attrs) do
+    update_resource(&Transactions.edit_transaction/2, transaction_id, updated_attrs, conn)
+  end
+
+  def delete_transaction(conn, params) do
+    %{"id" => transaction_id} = params
+
+    case Transactions.undo_transaction(transaction_id) do
       {:ok, _} ->
         send_resp(conn, 200, [])
 
@@ -72,10 +73,8 @@ defmodule BabysittingWeb.API.APIController do
     end
   end
 
-  def delete_transaction(conn, params) do
-    %{"id" => transaction_id} = params
-
-    case Transactions.undo_transaction(transaction_id) do
+  defp update_resource(f, id, attrs, conn) do
+    case f.(id, attrs) do
       {:ok, _} ->
         send_resp(conn, 200, [])
 

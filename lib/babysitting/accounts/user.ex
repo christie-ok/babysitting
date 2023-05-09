@@ -5,6 +5,10 @@ defmodule Babysitting.Accounts.User do
   @derive {Jason.Encoder,
            only: [:address, :city, :first_name, :last_name, :state, :zip, :hours_bank, :children]}
 
+  @required_fields [:first_name, :last_name]
+  @optional_fields [:address, :city, :state, :zip, :hours_bank]
+  @fields @required_fields ++ @optional_fields
+
   schema "users" do
     field :address, :string
     field :city, :string
@@ -22,7 +26,7 @@ defmodule Babysitting.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :address, :city, :state, :zip, :hours_bank])
-    |> validate_required([:first_name, :last_name])
+    |> cast(attrs, @fields)
+    |> validate_required(@required_fields)
   end
 end
