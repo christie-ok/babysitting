@@ -56,9 +56,10 @@ defmodule BabysittingWeb.API.APIControllerTest do
     end
 
     test "returns list of maps containing users' names, ids, and hours bank totals", %{conn: conn} do
-      parent = insert(:user, first_name: "Morticia", last_name: "Addams", hours_bank: 10)
+      parent = insert(:user, id: 13, first_name: "Morticia", last_name: "Addams", hours_bank: 10)
 
       insert(:child,
+        id: 42,
         parent: parent,
         first_name: "Wednesday",
         last_name: "Addams",
@@ -73,13 +74,16 @@ defmodule BabysittingWeb.API.APIControllerTest do
 
       assert decoded_resp_body(conn) == [
                %{
+                 "id" => 13,
                  "address" => nil,
                  "children" => [
                    %{
                      "birthday" => "2018-09-13",
                      "first_name" => "Wednesday",
                      "gender" => "girl",
-                     "last_name" => "Addams"
+                     "last_name" => "Addams",
+                     "parent_id" => 13,
+                     "id" => 42
                    }
                  ],
                  "city" => nil,
@@ -93,7 +97,7 @@ defmodule BabysittingWeb.API.APIControllerTest do
     end
   end
 
-  describe "show/2" do
+  describe "show_user/2" do
     test "returns 404 if user not found", %{conn: conn} do
       body = %{}
       conn = get(conn, ~p"/api/users/1", body)
@@ -101,24 +105,65 @@ defmodule BabysittingWeb.API.APIControllerTest do
       assert response_status(conn, 404)
     end
 
-    test "happy path - returns user and 200", %{conn: conn} do
-      insert(:user, id: 13, first_name: "Morticia", last_name: "Addams", hours_bank: 10)
+    test "happy path - returns user, with chidlren and all transactions with 200", %{conn: conn} do
+      parent_1 = insert(:user)
+      child = insert(:child, parent: parent_1, birthday: ~D[2020-12-15])
+      parent_1_id = parent_1.id
+      child_id = child.id
+
+      parent_2 = insert(:user)
+      parent_2_id = parent_2.id
+
+      insert(:transaction,
+        caregiving_user: parent_1,
+        care_getting_user: parent_2,
+        start: ~U[2023-05-03 10:00:00Z],
+        end: ~U[2023-05-03 13:00:00Z],
+        hours: 3.0
+      )
 
       body = %{}
-      conn = get(conn, ~p"/api/users/13", body)
+      conn = get(conn, ~p"/api/users/#{parent_1.id}", body)
 
       assert response_status(conn, 200)
 
-      assert decoded_resp_body(conn) == %{
+      assert %{
+               "transactions" => transactions,
+               "user" => user
+             } = decoded_resp_body(conn)
+
+      assert [
+               %{
+                 "care_getting_user_id" => ^parent_2_id,
+                 "caregiving_user_id" => ^parent_1_id,
+                 "end" => "2023-05-03T13:00:00Z",
+                 "hours" => 3.0,
+                 "id" => _,
+                 "inserted_at" => _,
+                 "start" => "2023-05-03T10:00:00Z"
+               }
+             ] = transactions
+
+      assert %{
+               "id" => _,
                "address" => nil,
-               "children" => [],
+               "children" => [
+                 %{
+                   "birthday" => "2020-12-15",
+                   "first_name" => _,
+                   "gender" => _,
+                   "id" => ^child_id,
+                   "last_name" => _,
+                   "parent_id" => ^parent_1_id
+                 }
+               ],
                "city" => nil,
-               "first_name" => "Morticia",
-               "hours_bank" => 10,
-               "last_name" => "Addams",
+               "first_name" => _,
+               "hours_bank" => 0.0,
+               "last_name" => _,
                "state" => nil,
                "zip" => nil
-             }
+             } = user
     end
   end
 

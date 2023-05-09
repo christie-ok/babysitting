@@ -86,4 +86,12 @@ defmodule Babysitting.Transactions do
   def change_transaction(%Transaction{} = transaction, attrs \\ %{}) do
     Transaction.changeset(transaction, attrs)
   end
+
+  def list_transactions_for_user(user) do
+    query =
+      from t in Transaction,
+        where: t.caregiving_user_id == ^user.id or t.care_getting_user_id == ^user.id
+
+    Repo.all(query)
+  end
 end

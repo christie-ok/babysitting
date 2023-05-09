@@ -67,4 +67,20 @@ defmodule Babysitting.ChildrenTest do
       assert %Ecto.Changeset{} = Children.change_child(child)
     end
   end
+
+  describe "child_age/1" do
+    test "returns child's age rounded down to nearest integer" do
+      today = Date.utc_today()
+      one_year_ago = Date.add(today, -365)
+      eighteen_months_ago = Date.add(today, -547)
+
+      child_1 = insert(:child, birthday: one_year_ago)
+      child_2 = insert(:child, birthday: eighteen_months_ago)
+      child_3 = insert(:child, birthday: today)
+
+      assert 1 == Children.child_age(child_1)
+      assert 1 == Children.child_age(child_2)
+      assert 0 == Children.child_age(child_3)
+    end
+  end
 end

@@ -3,7 +3,17 @@ defmodule Babysitting.Accounts.User do
   import Ecto.Changeset
 
   @derive {Jason.Encoder,
-           only: [:address, :city, :first_name, :last_name, :state, :zip, :hours_bank, :children]}
+           only: [
+             :id,
+             :address,
+             :city,
+             :first_name,
+             :last_name,
+             :state,
+             :zip,
+             :hours_bank,
+             :children
+           ]}
 
   @required_fields [:first_name, :last_name]
   @optional_fields [:address, :city, :state, :zip, :hours_bank]

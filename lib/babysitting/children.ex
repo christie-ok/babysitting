@@ -33,4 +33,10 @@ defmodule Babysitting.Children do
   def change_child(%Child{} = child, attrs \\ %{}) do
     Child.changeset(child, attrs)
   end
+
+  def child_age(%Child{} = child) do
+    Date.diff(Date.utc_today(), child.birthday)
+    |> div(365)
+    |> floor()
+  end
 end

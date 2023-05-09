@@ -22,8 +22,15 @@ defmodule BabysittingWeb.API.APIController do
     %{"id" => parent_id} = params
 
     case Accounts.get_user(parent_id) do
-      nil -> send_resp(conn, 404, "User not found.")
-      user -> send_resp(conn, 200, decorate_and_encode(user))
+      nil ->
+        send_resp(conn, 404, "User not found.")
+
+      user ->
+        user = Repo.preload(user, [:children])
+
+        transactions = Transactions.list_transactions_for_user(user)
+
+        send_resp(conn, 200, Jason.encode!(%{user: user, transactions: transactions}))
     end
   end
 
@@ -103,5 +110,22 @@ defmodule BabysittingWeb.API.APIController do
     users
     |> Repo.preload([:children])
     |> Jason.encode!()
+  end
+
+  defp calculate_childrens_ages(user) do
+    %{children: children} = user
+
+    children =
+      Enum.map(
+        children,
+        fn child ->
+          child
+          |> Map.from_struct()
+          |> Map.drop([:__meta__, :parent])
+          |> Map.put(:age, Children.child_age(child))
+        end
+      )
+
+    %{user | children: children}
   end
 end

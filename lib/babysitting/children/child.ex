@@ -2,7 +2,7 @@ defmodule Babysitting.Children.Child do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:first_name, :last_name, :birthday, :gender]}
+  @derive {Jason.Encoder, only: [:id, :parent_id, :first_name, :last_name, :birthday, :gender]}
 
   alias Babysitting.Accounts.User
 

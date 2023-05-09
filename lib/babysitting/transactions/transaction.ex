@@ -4,6 +4,17 @@ defmodule Babysitting.Transactions.Transaction do
 
   alias Babysitting.Accounts.User
 
+  @derive {Jason.Encoder,
+           only: [
+             :caregiving_user_id,
+             :care_getting_user_id,
+             :start,
+             :end,
+             :hours,
+             :id,
+             :inserted_at
+           ]}
+
   @decimal_preciscion 2
 
   schema "transactions" do

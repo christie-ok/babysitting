@@ -280,4 +280,24 @@ defmodule Babysitting.TransactionsTest do
       assert users_hours_bank(caregiver, 10.0)
     end
   end
+
+  describe "list_transactions_for_user/1" do
+    test "lists all transactions where user is caregiver or care_getter" do
+      user = insert(:user)
+      user_id = user.id
+
+      insert(:transaction, caregiving_user: user)
+      insert(:transaction, care_getting_user: user)
+      insert(:transaction)
+
+      assert [
+               %Transaction{
+                 caregiving_user_id: ^user_id
+               },
+               %Transaction{
+                 care_getting_user_id: ^user_id
+               }
+             ] = Transactions.list_transactions_for_user(user)
+    end
+  end
 end
